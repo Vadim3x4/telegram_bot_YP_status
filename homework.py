@@ -16,6 +16,7 @@ PRACTICUM_TOKEN = os.getenv("PRACTICUM_TOKEN")
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 URL_API = os.getenv('URL_API')
+bot = telegram.Bot(token=TELEGRAM_TOKEN)
 
 
 def parse_homework_status(homework):
@@ -26,7 +27,7 @@ def parse_homework_status(homework):
         verdict = ('Ревьюеру всё понравилось, можно '
                    'приступать к следующему уроку.')
     else:
-        logging.error('Неверный данные API')
+        logging.error('Неверный данные')
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
@@ -45,7 +46,6 @@ def get_homework_statuses(current_timestamp):
 
 
 def send_message(message):
-    bot = telegram.Bot(token=TELEGRAM_TOKEN)
     return bot.send_message(chat_id=CHAT_ID, text=message)
 
 
