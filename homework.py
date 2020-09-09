@@ -5,13 +5,15 @@ import time
 import logging
 from dotenv import load_dotenv
 
+logging.basicConfig(filename='app.log', filemode='a',
+                    format='%(name)s - %(levelname)s - %(message)s - %(asctime)s')
 
-logging.basicConfig(filename='home_work.log', filemode='w', 
-                    format='%(name)s - %(levelname)s - %(message)s')
+
+class Connection_error(Exception):
+    pass
+
 
 load_dotenv()
-
-
 PRACTICUM_TOKEN = os.getenv("PRACTICUM_TOKEN")
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
@@ -26,8 +28,6 @@ def parse_homework_status(homework):
     elif homework.get('status') == 'approved':
         verdict = ('Ревьюеру всё понравилось, можно '
                    'приступать к следующему уроку.')
-    else:
-        logging.error('Неверный данные')
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
@@ -37,12 +37,12 @@ def get_homework_statuses(current_timestamp):
     try:
         homework_statuses = requests.get(
             URL_API, headers=headers, params=params)
-        if homework_statuses.json().get('homeworks') is None:
-            logging.error("Неверные данные API")
-            print(homework_statuses.json())
+        if homework_statuses.status_code != 200:
+            raise Connection_error()
         return homework_statuses.json()
-    except (requests.exceptions.RequestException, ValueError):
-        logging.exception("Неверный ответ сервера")
+    except Connection_error:
+        logging.error('Ошибка соединения, проверьте URL_API и PRACTICUM_TOKEN')
+        exit()
 
 
 def send_message(message):
@@ -57,16 +57,20 @@ def main():
             new_homework = get_homework_statuses(current_timestamp)
             if new_homework.get('homeworks'):
                 send_message(parse_homework_status(
-                                        new_homework.get('homeworks')[0]))
+                    new_homework.get('homeworks')[0]))
             current_timestamp = new_homework.get(
-                                        'current_date')
+                'current_date')
             time.sleep(300)
 
         except Exception as e:
-            logging.exception(f'Бот упал с ошибкой: {e}')
+            logging.error(f'Бот упал с ошибкой: {e}')
             time.sleep(5)
             continue
 
 
-if __name__ == '__main__':
-    main()
+try:
+    if __name__ == '__main__':
+        main()
+except KeyboardInterrupt:
+    print('Quit')
+    exit()
