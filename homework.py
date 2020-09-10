@@ -19,26 +19,27 @@ bot = telegram.Bot(token=TELEGRAM_TOKEN)
 
 
 def parse_homework_status(homework):
-    homework_name = homework.get('homework_name')
     if ('status') not in homework:
         logging.error('Возникла ошибка с получением данных')
-        return f'Произошла ошибка при запросе!'
+        return f'Возникла ошибка с получением данных'
+    verdicts = {'rejected': 'К сожалению в работе нашлись ошибки.',
+                'approved': 'Ревьюеру всё понравилось, можно приступать к следующему уроку.'}
+    homework_name = homework.get('homework_name')
     if homework.get('status') == 'rejected':
-        return (f'У вас проверили работу {homework_name} '
-                f'К сожалению в работе нашлись ошибки.')
+        verdict = verdicts[homework.get('status')]
     elif homework.get('status') == 'approved':
-        return (f'У вас проверили работу {homework_name} '
-                f'Ревьюеру всё понравилось, можно приступать к следующему уроку.')
+        verdict = verdicts[homework.get('status')]
+    return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
 def get_homework_statuses(current_timestamp):
     if current_timestamp is None:
         logging.error('Возникла ошибка с форматом даты')
         return {}
-    headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
-    params = {'from_date': current_timestamp}
+    headers={'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
+    params={'from_date': current_timestamp}
     try:
-        homework_statuses = requests.get(
+        homework_statuses=requests.get(
             URL_API, headers=headers, params=params)
         if homework_statuses.status_code != 200:
             raise ConnectionException()
@@ -52,15 +53,15 @@ def send_message(message):
 
 
 def main():
-    current_timestamp = int(time.time())
+    current_timestamp=int(time.time())
 
     while True:
         try:
-            new_homework = get_homework_statuses(current_timestamp)
+            new_homework=get_homework_statuses(current_timestamp)
             if new_homework.get('homeworks'):
                 send_message(parse_homework_status(
                     new_homework.get('homeworks')[0]))
-            current_timestamp = new_homework.get('current_date')
+            current_timestamp=new_homework.get('current_date')
             time.sleep(300)
 
         except Exception as e:
