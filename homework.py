@@ -21,15 +21,17 @@ bot = telegram.Bot(token=TELEGRAM_TOKEN)
 def parse_homework_status(homework):
     if ('status') not in homework:
         logging.error('Возникла ошибка с получением данных')
-        return f'Возникла ошибка с получением данных'
+        return f'Возникла ошибка с получением данных '
     verdicts = {'rejected': 'К сожалению в работе нашлись ошибки.',
                 'approved': 'Ревьюеру всё понравилось, можно приступать к следующему уроку.'}
     homework_name = homework.get('homework_name')
     if homework.get('status') == 'rejected':
-        verdict = verdicts[homework.get('status')]
+        return f'У вас проверили работу "{homework_name}"' + verdicts[homework.get('status')]
     elif homework.get('status') == 'approved':
-        verdict = verdicts[homework.get('status')]
-    return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
+        return f'У вас проверили работу "{homework_name}"' + verdicts[homework.get('status')]
+    logging.error('Возникла ошибка с получением данных о статусе работы')
+    return f'Возникла ошибка с получением данных о статусе работы'
+
 
 
 def get_homework_statuses(current_timestamp):
@@ -53,7 +55,7 @@ def send_message(message):
 
 
 def main():
-    current_timestamp=int(time.time())
+    current_timestamp=int(time.time()) 
 
     while True:
         try:
